@@ -32,7 +32,8 @@ func main() {
 	defer pprof.StopCPUProfile()
 
 	// V1()
-	V2()
+	// V2()
+	V3()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -146,6 +147,80 @@ func V2() {
 		parts := strings.Split(scanner.Text(), ";")
 		key := parts[0]
 		var64, err := strconv.ParseFloat(parts[1], 64)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		val, found := values[key]
+		if !found {
+			values[key] = &Values{Min: var64, Mean: var64, Max: var64}
+		} else {
+			// Min eval
+			if val.Min > var64 {
+				val.Min = var64
+			}
+
+			// Mean eval
+			val.Mean = val.Mean + var64
+			val.MeanCount = val.MeanCount + 1
+
+			// Max eval
+			if val.Max < var64 {
+				val.Max = var64
+			}
+		}
+
+	}
+
+	keys := make([]string, len(values))
+	idx := 0
+	for key := range values {
+		keys[idx] = key
+		idx++
+	}
+	sort.Strings(keys)
+
+	output := "{"
+	for idx, key := range keys {
+		minVal := math.Round(values[key].Min*10) / 10
+		meanVal := math.Round(values[key].Mean/float64(values[key].MeanCount)*10) / 10
+		maxVal := math.Round(values[key].Max*10) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
+		if idx < len(keys)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Identical to V2 but opts for string slicing instead of using strings.Split
+// Average time 55seconds
+// runtime.mapaccess2_faststr 16seconds
+// strconv.ParseFloat 13seconds
+// bufio.(*Scanner).Scan 8seconds
+// bufio.(*Scanner).Text 8 seconds
+// strings.Index 5seconds
+func V3() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	values := make(map[string]*Values)
+	for scanner.Scan() {
+		valStr := scanner.Text()
+		idx := strings.Index(valStr, ";")
+		key := valStr[:idx]
+		var64, err := strconv.ParseFloat(valStr[idx+1:], 64)
 
 		if err != nil {
 			log.Fatal(err)

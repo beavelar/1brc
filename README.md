@@ -6,7 +6,7 @@ Attempting the 1 billion row challenge in various languages and profiling to lea
 
 The 1BRC involves reading a text file with 1 billion rows (each `city;temperature`) and calculating the min, max, and mean temperature for each city, then printing the results sorted by city alphabetically.
 
-[`Link to official challenge details`](https://github.com/gunnars/1brc)
+[`Link to official challenge details`](https://github.com/gunnarmorling/1brc)
 
 ## Setup
 

@@ -13,13 +13,6 @@ import (
 	"time"
 )
 
-type Values struct {
-	Min       float64
-	Mean      float64
-	MeanCount int
-	Max       float64
-}
-
 func main() {
 	fmt.Println("Running calculations")
 	start := time.Now()
@@ -41,6 +34,7 @@ func main() {
 
 // Super basic tracking and parsing, first go hacking something together
 // Average time 1minute 55seconds
+// Mac Average time 2minute 25seconds
 // runtime.mapaccess2_faststr 39seconds
 // strings.Split 26seconds
 // strconv.ParseFloat 14seconds
@@ -126,8 +120,16 @@ func V1() {
 	}
 }
 
+type Values struct {
+	Min       float64
+	Mean      float64
+	MeanCount int
+	Max       float64
+}
+
 // Reducing the number of maps used but mostly the same as v1
 // Average time 1minute 10seconds
+// Mac Average time 1minute 37seconds
 // strings.Split 24seconds
 // runtime.mapaccess2_faststr 17seconds
 // strconv.ParseFloat 14seconds
@@ -170,7 +172,6 @@ func V2() {
 				val.Max = var64
 			}
 		}
-
 	}
 
 	keys := make([]string, len(values))
@@ -201,6 +202,7 @@ func V2() {
 
 // Identical to V2 but opts for string slicing instead of using strings.Split
 // Average time 55seconds
+// Mac Average time 1minute 8seconds
 // runtime.mapaccess2_faststr 16seconds
 // strconv.ParseFloat 13seconds
 // bufio.(*Scanner).Scan 8seconds
@@ -244,7 +246,6 @@ func V3() {
 				val.Max = var64
 			}
 		}
-
 	}
 
 	keys := make([]string, len(values))

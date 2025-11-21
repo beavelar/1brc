@@ -26,7 +26,8 @@ func main() {
 
 	// V1()
 	// V2()
-	V3()
+	//V3()
+	V4()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -223,6 +224,111 @@ func V3() {
 		idx := strings.Index(valStr, ";")
 		key := valStr[:idx]
 		var64, err := strconv.ParseFloat(valStr[idx+1:], 64)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		val, found := values[key]
+		if !found {
+			values[key] = &Values{Min: var64, Mean: var64, Max: var64}
+		} else {
+			// Min eval
+			if val.Min > var64 {
+				val.Min = var64
+			}
+
+			// Mean eval
+			val.Mean = val.Mean + var64
+			val.MeanCount = val.MeanCount + 1
+
+			// Max eval
+			if val.Max < var64 {
+				val.Max = var64
+			}
+		}
+	}
+
+	keys := make([]string, len(values))
+	idx := 0
+	for key := range values {
+		keys[idx] = key
+		idx++
+	}
+	sort.Strings(keys)
+
+	output := "{"
+	for idx, key := range keys {
+		minVal := math.Round(values[key].Min*10) / 10
+		meanVal := math.Round(values[key].Mean/float64(values[key].MeanCount)*10) / 10
+		maxVal := math.Round(values[key].Max*10) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
+		if idx < len(keys)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Mostly identical to V3 but using scanner.Bytes() instead of scanner.Text()
+// Average 43seconds
+// runtime.mapaccess2_faststr 14seconds
+// bufio.(*Scanner).Scan 12seconds
+// runtime.slicebytetostring 9seconds
+func V4() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	values := make(map[string]*Values)
+	for scanner.Scan() {
+		lineBytes := scanner.Bytes()
+		idx := -1
+		for i, b := range lineBytes {
+			if b == ';' {
+				idx = i
+				break
+			}
+		}
+
+		keyBytes := lineBytes[:idx]
+		valBytes := lineBytes[idx+1:]
+		key := string(keyBytes)
+
+		var sign float64 = 1.0
+		var intPart, fracPart int64
+		var decimalSeen bool
+		var numStart int
+
+		if valBytes[0] == '-' {
+			sign = -1.0
+			numStart = 1
+		} else {
+			numStart = 0
+		}
+
+		for i := numStart; i < len(valBytes); i++ {
+			if valBytes[i] == '.' {
+				decimalSeen = true
+				continue
+			}
+			digit := int64(valBytes[i] - '0')
+			if !decimalSeen {
+				intPart = intPart*10 + digit
+			} else {
+				fracPart = digit 
+			}
+		}
+		var64 := sign * (float64(intPart) + float64(fracPart)/10.0)
 
 		if err != nil {
 			log.Fatal(err)

@@ -28,15 +28,16 @@ func main() {
 	// V2()
 	// V3()
 	// V4()
-	V5()
+	// V5()
+	V6()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
 }
 
 // Super basic tracking and parsing, first go hacking something together
+//
 // Average time 1minute 55seconds
-// Mac Average time 2minute 25seconds
 // runtime.mapaccess2_faststr 39seconds
 // strings.Split 26seconds
 // strconv.ParseFloat 14seconds
@@ -44,6 +45,8 @@ func main() {
 // runtime.mapaccess1_faststr 11seconds
 // bufio.(*Scanner).Scan 8seconds
 // (*Scanner).Text 7.09seconds
+//
+// Mac Average time 2minute 25seconds
 func V1() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -123,20 +126,22 @@ func V1() {
 }
 
 type Values struct {
-	Min       float64
-	Mean      float64
-	MeanCount int
-	Max       float64
+	Max   float64
+	Min   float64
+	Sum   float64
+	Count int
 }
 
 // Reducing the number of maps used but mostly the same as v1
+//
 // Average time 1minute 10seconds
-// Mac Average time 1minute 37seconds
 // strings.Split 24seconds
 // runtime.mapaccess2_faststr 17seconds
 // strconv.ParseFloat 14seconds
 // bufio(*Scanner).Text 7seconds
 // bufio(*Scanner).Scan 7seconds
+//
+// Mac Average time 1minute 37seconds
 func V2() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -158,7 +163,7 @@ func V2() {
 
 		val, found := values[key]
 		if !found {
-			values[key] = &Values{Min: var64, Mean: var64, Max: var64}
+			values[key] = &Values{Min: var64, Sum: var64, Max: var64}
 		} else {
 			// Min eval
 			if val.Min > var64 {
@@ -166,8 +171,8 @@ func V2() {
 			}
 
 			// Mean eval
-			val.Mean = val.Mean + var64
-			val.MeanCount = val.MeanCount + 1
+			val.Sum = val.Sum + var64
+			val.Count = val.Count + 1
 
 			// Max eval
 			if val.Max < var64 {
@@ -187,7 +192,7 @@ func V2() {
 	output := "{"
 	for idx, key := range keys {
 		minVal := math.Round(values[key].Min*10) / 10
-		meanVal := math.Round(values[key].Mean/float64(values[key].MeanCount)*10) / 10
+		meanVal := math.Round(values[key].Sum/float64(values[key].Count)*10) / 10
 		maxVal := math.Round(values[key].Max*10) / 10
 		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
 		if idx < len(keys)-1 {
@@ -203,13 +208,15 @@ func V2() {
 }
 
 // Identical to V2 but opts for string slicing instead of using strings.Split
+//
 // Average time 55seconds
-// Mac Average time 1minute 8seconds
 // runtime.mapaccess2_faststr 16seconds
 // strconv.ParseFloat 13seconds
 // bufio.(*Scanner).Scan 8seconds
 // bufio.(*Scanner).Text 8 seconds
 // strings.Index 5seconds
+//
+// Mac Average time 1minute 8seconds
 func V3() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -232,7 +239,7 @@ func V3() {
 
 		val, found := values[key]
 		if !found {
-			values[key] = &Values{Min: var64, Mean: var64, Max: var64}
+			values[key] = &Values{Min: var64, Sum: var64, Max: var64}
 		} else {
 			// Min eval
 			if val.Min > var64 {
@@ -240,8 +247,8 @@ func V3() {
 			}
 
 			// Mean eval
-			val.Mean = val.Mean + var64
-			val.MeanCount = val.MeanCount + 1
+			val.Sum = val.Sum + var64
+			val.Count = val.Count + 1
 
 			// Max eval
 			if val.Max < var64 {
@@ -261,7 +268,7 @@ func V3() {
 	output := "{"
 	for idx, key := range keys {
 		minVal := math.Round(values[key].Min*10) / 10
-		meanVal := math.Round(values[key].Mean/float64(values[key].MeanCount)*10) / 10
+		meanVal := math.Round(values[key].Sum/float64(values[key].Count)*10) / 10
 		maxVal := math.Round(values[key].Max*10) / 10
 		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
 		if idx < len(keys)-1 {
@@ -277,10 +284,13 @@ func V3() {
 }
 
 // Mostly identical to V3 but using scanner.Bytes() instead of scanner.Text()
+//
 // Average 43seconds
 // runtime.mapaccess2_faststr 14seconds
 // bufio.(*Scanner).Scan 12seconds
 // runtime.slicebytetostring 9seconds
+//
+// Mac Average 57seconds
 func V4() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -337,7 +347,7 @@ func V4() {
 
 		val, found := values[key]
 		if !found {
-			values[key] = &Values{Min: var64, Mean: var64, Max: var64}
+			values[key] = &Values{Min: var64, Sum: var64, Max: var64}
 		} else {
 			// Min eval
 			if val.Min > var64 {
@@ -345,8 +355,8 @@ func V4() {
 			}
 
 			// Mean eval
-			val.Mean = val.Mean + var64
-			val.MeanCount = val.MeanCount + 1
+			val.Sum = val.Sum + var64
+			val.Count = val.Count + 1
 
 			// Max eval
 			if val.Max < var64 {
@@ -366,7 +376,7 @@ func V4() {
 	output := "{"
 	for idx, key := range keys {
 		minVal := math.Round(values[key].Min*10) / 10
-		meanVal := math.Round(values[key].Mean/float64(values[key].MeanCount)*10) / 10
+		meanVal := math.Round(values[key].Sum/float64(values[key].Count)*10) / 10
 		maxVal := math.Round(values[key].Max*10) / 10
 		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
 		if idx < len(keys)-1 {
@@ -382,10 +392,13 @@ func V4() {
 }
 
 // Pretty much the save as V4 but sets the size of the values slice to 1,000
+//
 // Average 38seconds
 // runtime.mapaccess2_faststr 16seconds
 // runtime.slicebytetostring 8seconds
 // bufio.(*Scanner).Scan 7seconds
+//
+// Mac Average 55seconds
 func V5() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -442,7 +455,7 @@ func V5() {
 
 		val, found := values[key]
 		if !found {
-			values[key] = &Values{Min: var64, Mean: var64, Max: var64}
+			values[key] = &Values{Min: var64, Sum: var64, Max: var64}
 		} else {
 			// Min eval
 			if val.Min > var64 {
@@ -450,8 +463,8 @@ func V5() {
 			}
 
 			// Mean eval
-			val.Mean = val.Mean + var64
-			val.MeanCount = val.MeanCount + 1
+			val.Sum = val.Sum + var64
+			val.Count = val.Count + 1
 
 			// Max eval
 			if val.Max < var64 {
@@ -471,8 +484,119 @@ func V5() {
 	output := "{"
 	for idx, key := range keys {
 		minVal := math.Round(values[key].Min*10) / 10
-		meanVal := math.Round(values[key].Mean/float64(values[key].MeanCount)*10) / 10
+		meanVal := math.Round(values[key].Sum/float64(values[key].Count)*10) / 10
 		maxVal := math.Round(values[key].Max*10) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
+		if idx < len(keys)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Store the values as int and do the final float calculation at the very end
+type ValuesV2 struct {
+	Min   int32
+	Max   int32
+	Sum   int32
+	Count int32
+}
+
+// Mostly the save as V5 but opts for working with int32 for the values to track
+// and do the float64 work only at the end
+//
+// Mac Average 54seconds
+func V6() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	values := make(map[string]*ValuesV2, 1000)
+	for scanner.Scan() {
+		lineBytes := scanner.Bytes()
+		idx := -1
+		for i, b := range lineBytes {
+			if b == ';' {
+				idx = i
+				break
+			}
+		}
+
+		keyBytes := lineBytes[:idx]
+		valBytes := lineBytes[idx+1:]
+		key := string(keyBytes)
+
+		var sign int32 = 1.0
+		var intPart, fracPart int32
+		var decimalSeen bool
+		var numStart int
+
+		if valBytes[0] == '-' {
+			sign = -1.0
+			numStart = 1
+		} else {
+			numStart = 0
+		}
+
+		for i := numStart; i < len(valBytes); i++ {
+			if valBytes[i] == '.' {
+				decimalSeen = true
+				continue
+			}
+			digit := int32(valBytes[i] - '0')
+			if !decimalSeen {
+				intPart = intPart*10 + digit
+			} else {
+				fracPart = digit
+			}
+		}
+		var32 := sign * (intPart + fracPart)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if val, found := values[key]; !found {
+			values[key] = &ValuesV2{Min: var32, Sum: var32, Max: var32}
+		} else {
+			// Min eval
+			if val.Min > var32 {
+				val.Min = var32
+			}
+
+			// Mean eval
+			val.Sum += var32
+			val.Count++
+
+			// Max eval
+			if val.Max < var32 {
+				val.Max = var32
+			}
+		}
+	}
+
+	keys := make([]string, len(values))
+	idx := 0
+	for key := range values {
+		keys[idx] = key
+		idx++
+	}
+	sort.Strings(keys)
+
+	output := "{"
+	for idx, key := range keys {
+		minVal := float64(values[key].Min) / 10
+		meanVal := math.Round(float64(values[key].Sum)/float64(values[key].Count)*10) / 100
+		maxVal := float64(values[key].Max) / 10
 		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
 		if idx < len(keys)-1 {
 			output += ", "

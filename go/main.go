@@ -39,14 +39,14 @@ func main() {
 
 // Super basic tracking and parsing, first go hacking something together
 //
-// Average time 1minute 55seconds
-// runtime.mapaccess2_faststr 39seconds
+// Average time 1minute 49seconds
+// runtime.mapaccess2_faststr 37seconds
 // strings.Split 26seconds
-// strconv.ParseFloat 14seconds
-// runtime.mapassign_faststr 12seconds
-// runtime.mapaccess1_faststr 11seconds
+// strconv.ParseFloat 16seconds
+// runtime.mapassign_faststr 11seconds
+// runtime.mapaccess1_faststr 10seconds
+// (*Scanner).Text 9seconds
 // bufio.(*Scanner).Scan 8seconds
-// (*Scanner).Text 7.09seconds
 //
 // Mac Average time 2minute 25seconds
 func V1() {
@@ -136,12 +136,12 @@ type Values struct {
 
 // Reducing the number of maps used but mostly the same as v1
 //
-// Average time 1minute 10seconds
+// Average time 1minute 7seconds
 // strings.Split 24seconds
-// runtime.mapaccess2_faststr 17seconds
+// runtime.mapaccess2_faststr 16seconds
 // strconv.ParseFloat 14seconds
+// bufio(*Scanner).Scan 9seconds
 // bufio(*Scanner).Text 7seconds
-// bufio(*Scanner).Scan 7seconds
 //
 // Mac Average time 1minute 37seconds
 func V2() {
@@ -211,7 +211,7 @@ func V2() {
 
 // Identical to V2 but opts for string slicing instead of using strings.Split
 //
-// Average time 55seconds
+// Average time 47seconds
 // runtime.mapaccess2_faststr 16seconds
 // strconv.ParseFloat 13seconds
 // bufio.(*Scanner).Scan 8seconds
@@ -287,10 +287,10 @@ func V3() {
 
 // Mostly identical to V3 but using scanner.Bytes() instead of scanner.Text()
 //
-// Average 43seconds
+// Average 38seconds
 // runtime.mapaccess2_faststr 14seconds
-// bufio.(*Scanner).Scan 12seconds
 // runtime.slicebytetostring 9seconds
+// bufio.(*Scanner).Scan 7seconds
 //
 // Mac Average 57seconds
 func V4() {
@@ -395,9 +395,9 @@ func V4() {
 
 // Pretty much the save as V4 but sets the size of the values slice to 1,000
 //
-// Average 38seconds
+// Average 37seconds
 // runtime.mapaccess2_faststr 16seconds
-// runtime.slicebytetostring 8seconds
+// runtime.slicebytetostring 7seconds
 // bufio.(*Scanner).Scan 7seconds
 //
 // Mac Average 55seconds
@@ -512,6 +512,11 @@ type ValuesV2 struct {
 // Mostly the save as V5 but opts for working with int32 and int64 for the values
 // to trace and do the float64 work only at the end
 //
+// Average 36seconds
+// runtime.mapaccess2_faststr 19seconds
+// runtime.slicebytetostring 7seconds
+// bufio.(*Scanner).Scan 7seconds
+//
 // Mac Average 54seconds
 func V6() {
 	file, err := os.Open("../1brc/measurements.txt")
@@ -615,6 +620,11 @@ func V6() {
 
 // Identical to V6 but utilizing bytes.IndexByte to locate the semicolon instead
 // of manually searching using the for loop
+//
+// Average 35seconds
+// runtime.mapaccess2_faststr 18seconds
+// bufio.(*Scanner).Scan 7seconds
+// runtime.slicebytetostring 6seconds
 //
 // Mac Average 54seconds
 func V7() {

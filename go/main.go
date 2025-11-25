@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"log"
 	"math"
@@ -29,7 +30,8 @@ func main() {
 	// V3()
 	// V4()
 	// V5()
-	V6()
+	// V6()
+	V7()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -503,15 +505,15 @@ func V5() {
 type ValuesV2 struct {
 	Min   int32
 	Max   int32
-	Sum   int32
+	Sum   int64
 	Count int32
 }
 
-// Mostly the save as V5 but opts for working with int32 for the values to track
-// and do the float64 work only at the end
+// Mostly the save as V5 but opts for working with int32 and int64 for the values
+// to trace and do the float64 work only at the end
 //
 // Mac Average 54seconds
-func V6() {
+func V7() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -559,14 +561,15 @@ func V6() {
 				fracPart = digit
 			}
 		}
-		var32 := sign * (intPart + fracPart)
+		var32 := sign * (intPart*10 + fracPart)
+		var64 := int64(var32)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		if val, found := values[key]; !found {
-			values[key] = &ValuesV2{Min: var32, Sum: var32, Max: var32}
+			values[key] = &ValuesV2{Min: var32, Sum: var64, Max: var32}
 		} else {
 			// Min eval
 			if val.Min > var32 {
@@ -574,7 +577,105 @@ func V6() {
 			}
 
 			// Mean eval
-			val.Sum += var32
+			val.Sum += var64
+			val.Count++
+
+			// Max eval
+			if val.Max < var32 {
+				val.Max = var32
+			}
+		}
+	}
+
+	keys := make([]string, len(values))
+	idx := 0
+	for key := range values {
+		keys[idx] = key
+		idx++
+	}
+	sort.Strings(keys)
+
+	output := "{"
+	for idx, key := range keys {
+		minVal := float64(values[key].Min) / 10
+		meanVal := math.Round(float64(values[key].Sum)/float64(values[key].Count)*10) / 100
+		maxVal := float64(values[key].Max) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
+		if idx < len(keys)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Identical to V5 but utilizing bytes.IndexByte to locate the semicolon instead
+// of manually searching using the for loop
+//
+// Mac Average 54seconds
+func V6() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	values := make(map[string]*ValuesV2, 1000)
+	for scanner.Scan() {
+		lineBytes := scanner.Bytes()
+		idx := bytes.IndexByte(lineBytes, ';')
+
+		keyBytes := lineBytes[:idx]
+		valBytes := lineBytes[idx+1:]
+		key := string(keyBytes)
+
+		var sign int32 = 1.0
+		var intPart, fracPart int32
+		var decimalSeen bool
+		var numStart int
+
+		if valBytes[0] == '-' {
+			sign = -1.0
+			numStart = 1
+		} else {
+			numStart = 0
+		}
+
+		for i := numStart; i < len(valBytes); i++ {
+			if valBytes[i] == '.' {
+				decimalSeen = true
+				continue
+			}
+			digit := int32(valBytes[i] - '0')
+			if !decimalSeen {
+				intPart = intPart*10 + digit
+			} else {
+				fracPart = digit
+			}
+		}
+		var32 := sign * (intPart*10 + fracPart)
+		var64 := int64(var32)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if val, found := values[key]; !found {
+			values[key] = &ValuesV2{Min: var32, Sum: var64, Max: var32}
+		} else {
+			// Min eval
+			if val.Min > var32 {
+				val.Min = var32
+			}
+
+			// Mean eval
+			val.Sum += var64
 			val.Count++
 
 			// Max eval

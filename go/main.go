@@ -31,8 +31,7 @@ func main() {
 	// V4()
 	// V5()
 	// V6()
-	// V7()
-	V8()
+	V7()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)

@@ -31,7 +31,8 @@ func main() {
 	// V4()
 	// V5()
 	// V6()
-	V7()
+	// V7()
+	V8()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -542,13 +543,13 @@ func V6() {
 		valBytes := lineBytes[idx+1:]
 		key := string(keyBytes)
 
-		var sign int32 = 1.0
+		var sign int32 = 1
 		var intPart, fracPart int32
 		var decimalSeen bool
 		var numStart int
 
 		if valBytes[0] == '-' {
-			sign = -1.0
+			sign = -1
 			numStart = 1
 		} else {
 			numStart = 0
@@ -645,13 +646,13 @@ func V7() {
 		valBytes := lineBytes[idx+1:]
 		key := string(keyBytes)
 
-		var sign int32 = 1.0
+		var sign int32 = 1
 		var intPart, fracPart int32
 		var decimalSeen bool
 		var numStart int
 
 		if valBytes[0] == '-' {
-			sign = -1.0
+			sign = -1
 			numStart = 1
 		} else {
 			numStart = 0

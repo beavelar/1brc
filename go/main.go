@@ -513,7 +513,7 @@ type ValuesV2 struct {
 // to trace and do the float64 work only at the end
 //
 // Mac Average 54seconds
-func V7() {
+func V6() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -613,11 +613,11 @@ func V7() {
 	}
 }
 
-// Identical to V5 but utilizing bytes.IndexByte to locate the semicolon instead
+// Identical to V6 but utilizing bytes.IndexByte to locate the semicolon instead
 // of manually searching using the for loop
 //
 // Mac Average 54seconds
-func V6() {
+func V7() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
 		log.Fatal(err)

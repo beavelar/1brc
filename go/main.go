@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"sort"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 
 func main() {
 	fmt.Println("Running calculations")
+	fmt.Printf("Number of threads: %d\n", runtime.NumCPU())
 	start := time.Now()
 	prof, err := os.Create("cpu.pprof")
 	if err != nil {
@@ -36,7 +38,8 @@ func main() {
 	// V7()
 	// V8()
 	// V9()
-	V10()
+	// V10()
+	V11()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -821,7 +824,7 @@ func V8() {
 
 	scanner := bufio.NewScanner(file)
 
-	// Create chunks of 100 lines instead of reading line by line, mess around with line
+	// Create chunks of 1000 lines instead of reading line by line, mess around with line
 	// chunks to view the impact
 	linesPerChunk := 1000
 	scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -1112,7 +1115,188 @@ func V10() {
 
 	scanner := bufio.NewScanner(file)
 
-	// Create chunks of 100 lines instead of reading line by line, mess around with line
+	// Create chunks of 1000 lines instead of reading line by line, mess around with line
+	// chunks to view the impact
+	linesPerChunk := 1000
+	scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if atEOF && len(data) == 0 {
+			return 0, nil, nil
+		}
+
+		newlineCount := 0
+		lastNewlineIndex := -1
+		for i, b := range data {
+			if b == '\n' {
+				newlineCount++
+				lastNewlineIndex = i
+			}
+			if newlineCount >= linesPerChunk {
+				return lastNewlineIndex + 1, data[:lastNewlineIndex], nil
+			}
+		}
+
+		if atEOF {
+			return len(data), data, nil
+		}
+
+		return 0, nil, nil
+	})
+
+	values := make(map[int64]*ValuesV3, 1000)
+	for scanner.Scan() {
+		chunkBytes := scanner.Bytes()
+		chunkCopy := make([]byte, len(chunkBytes))
+		copy(chunkCopy, chunkBytes)
+		linesChan <- chunkCopy
+	}
+
+	close(linesChan)
+	wg.Wait()
+
+	for _, resultMap := range resultMaps {
+		for key, val := range resultMap {
+			if finalVal, found := values[key]; !found {
+				values[key] = val
+			} else {
+				if finalVal.Min > val.Min {
+					finalVal.Min = val.Min
+				}
+				finalVal.Sum += val.Sum
+				finalVal.Count += val.Count
+				if finalVal.Max < val.Max {
+					finalVal.Max = val.Max
+				}
+			}
+		}
+	}
+
+	sortedValues := make([]*ValuesV3, len(values))
+	idx := 0
+	for _, value := range values {
+		sortedValues[idx] = value
+		idx++
+	}
+	sort.Slice(sortedValues, func(i, j int) bool {
+		return sortedValues[i].City < sortedValues[j].City
+	})
+
+	output := "{"
+	for idx, value := range sortedValues {
+		minVal := float64(value.Min) / 10
+		meanVal := math.Round(float64(value.Sum)/float64(value.Count)*10) / 100
+		maxVal := float64(value.Max) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", value.City, minVal, meanVal, maxVal)
+		if idx < len(sortedValues)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Identical to V10 but updating workers to be 1 less than the number of threads on the CPU
+// and increasing scanner buffere size
+//
+// Average 10seconds
+// main.V11.func1.SplitSeq.splitSeq.1 34seconds
+// bufio.(*Scanner).Scan 9seconds
+// gcBgMarkWorker 6seconds
+// runtime.mcall 3seconds
+func V11() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	// The number of workers to spin up to handle line chunk processing/calculations, mess
+	// around with the number of workers to view the impact
+	workers := runtime.NumCPU() - 1
+
+	var wg sync.WaitGroup
+	linesChan := make(chan []byte, 10000)
+	resultMaps := make([]map[int64]*ValuesV3, workers)
+
+	for idx := range workers {
+		wg.Add(1)
+		resultMap := make(map[int64]*ValuesV3)
+		resultMaps[idx] = resultMap
+		go func(wg *sync.WaitGroup, input chan []byte, output map[int64]*ValuesV3) {
+			hasher := fnv.New64a()
+			for chunkBytes := range input {
+				for lineBytes := range bytes.SplitSeq(chunkBytes, []byte("\n")) {
+					idx := bytes.IndexByte(lineBytes, ';')
+
+					keyBytes := lineBytes[:idx]
+					valBytes := lineBytes[idx+1:]
+
+					hasher.Write(keyBytes)
+					key := int64(hasher.Sum64())
+					hasher.Reset()
+
+					var sign int32 = 1
+					var intPart, fracPart int32
+					var decimalSeen bool
+					var numStart int
+
+					if valBytes[0] == '-' {
+						sign = -1
+						numStart = 1
+					} else {
+						numStart = 0
+					}
+
+					for i := numStart; i < len(valBytes); i++ {
+						if valBytes[i] == '.' {
+							decimalSeen = true
+							continue
+						}
+						digit := int32(valBytes[i] - '0')
+						if !decimalSeen {
+							intPart = intPart*10 + digit
+						} else {
+							fracPart = digit
+						}
+					}
+					var32 := sign * (intPart*10 + fracPart)
+					var64 := int64(var32)
+
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					if val, found := output[key]; !found {
+						output[key] = &ValuesV3{City: string(keyBytes), Min: var32, Sum: var64, Max: var32}
+					} else {
+						// Min eval
+						if val.Min > var32 {
+							val.Min = var32
+						}
+
+						// Mean eval
+						val.Sum += var64
+						val.Count++
+
+						// Max eval
+						if val.Max < var32 {
+							val.Max = var32
+						}
+					}
+				}
+			}
+			wg.Done()
+		}(&wg, linesChan, resultMap)
+	}
+
+	scanner := bufio.NewScanner(file)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
+
+	// Create chunks of 1000 lines instead of reading line by line, mess around with line
 	// chunks to view the impact
 	linesPerChunk := 1000
 	scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {

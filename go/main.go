@@ -728,6 +728,11 @@ func V7() {
 // the chunk by splitting it by newlines and then running through the same calculations.
 // Combines the results of all workers at the end to produce the end result
 //
+// Average 14seconds
+// main.V8.func1.SplitSeq.splitSeq.1 29seconds
+// bufio.(*Scanner).Scan 18seconds
+// runtime.mcall 6seconds
+//
 // Mac Average 13seconds
 func V8() {
 	file, err := os.Open("../1brc/measurements.txt")

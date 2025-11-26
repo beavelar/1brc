@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"math"
 	"os"
@@ -33,7 +34,8 @@ func main() {
 	// V5()
 	// V6()
 	// V7()
-	V8()
+	// V8()
+	V9()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -885,6 +887,123 @@ func V8() {
 		maxVal := float64(values[key].Max) / 10
 		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
 		if idx < len(keys)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Mostly same as ValuesV2 but with the addition of the City field
+type ValuesV3 struct {
+	City  string
+	Min   int32
+	Max   int32
+	Sum   int64
+	Count int32
+}
+
+// Rollback to V7 instead of V8 to further optimize single thread performance
+// Instead of using the byte slice of the city for the map key, use a basic
+// hasher to turn the byte slice to a int64 to be used as the key and store
+// the city name in the new ValuesV3
+//
+// Average 33seconds
+// bufio.(*Scanner).Scan 14seconds
+// runtime.mapaccess2_fast64 12seconds
+func V9() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	values := make(map[int64]*ValuesV3, 1000)
+	hasher := fnv.New64a()
+	for scanner.Scan() {
+		lineBytes := scanner.Bytes()
+		idx := bytes.IndexByte(lineBytes, ';')
+
+		keyBytes := lineBytes[:idx]
+		valBytes := lineBytes[idx+1:]
+
+		hasher.Write(keyBytes)
+		key := int64(hasher.Sum64())
+		hasher.Reset()
+
+		var sign int32 = 1
+		var intPart, fracPart int32
+		var decimalSeen bool
+		var numStart int
+
+		if valBytes[0] == '-' {
+			sign = -1
+			numStart = 1
+		} else {
+			numStart = 0
+		}
+
+		for i := numStart; i < len(valBytes); i++ {
+			if valBytes[i] == '.' {
+				decimalSeen = true
+				continue
+			}
+			digit := int32(valBytes[i] - '0')
+			if !decimalSeen {
+				intPart = intPart*10 + digit
+			} else {
+				fracPart = digit
+			}
+		}
+		var32 := sign * (intPart*10 + fracPart)
+		var64 := int64(var32)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if val, found := values[key]; !found {
+			values[key] = &ValuesV3{City: string(keyBytes), Min: var32, Sum: var64, Max: var32}
+		} else {
+			// Min eval
+			if val.Min > var32 {
+				val.Min = var32
+			}
+
+			// Mean eval
+			val.Sum += var64
+			val.Count++
+
+			// Max eval
+			if val.Max < var32 {
+				val.Max = var32
+			}
+		}
+	}
+
+	sortedValues := make([]*ValuesV3, len(values))
+	idx := 0
+	for _, value := range values {
+		sortedValues[idx] = value
+		idx++
+	}
+	sort.Slice(sortedValues, func(i, j int) bool {
+		return sortedValues[i].City < sortedValues[j].City
+	})
+
+	output := "{"
+	for idx, value := range sortedValues {
+		minVal := float64(value.Min) / 10
+		meanVal := math.Round(float64(value.Sum)/float64(value.Count)*10) / 100
+		maxVal := float64(value.Max) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", value.City, minVal, meanVal, maxVal)
+		if idx < len(sortedValues)-1 {
 			output += ", "
 		}
 	}

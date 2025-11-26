@@ -19,7 +19,7 @@ import (
 
 func main() {
 	fmt.Println("Running calculations")
-	fmt.Printf("Number of threads: %d\n", runtime.NumCPU())
+	fmt.Printf("Number of threads available: %d\n", runtime.NumCPU())
 	start := time.Now()
 	prof, err := os.Create("cpu.pprof")
 	if err != nil {
@@ -919,6 +919,8 @@ type ValuesV3 struct {
 // Average 33seconds
 // bufio.(*Scanner).Scan 14seconds
 // runtime.mapaccess2_fast64 12seconds
+//
+// Mac Average 44seconds
 func V9() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -1027,6 +1029,8 @@ func V9() {
 // bufio.(*Scanner).Scan 16seconds
 // runtime.mcall 5seconds
 // runtime.gcBgMarkWorker 5seconds
+//
+// Mac Average 14seconds
 func V10() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -1199,13 +1203,15 @@ func V10() {
 }
 
 // Identical to V10 but updating workers to be 1 less than the number of threads on the CPU
-// and increasing scanner buffere size
+// and increasing scanner buffer size
 //
 // Average 10seconds
 // main.V11.func1.SplitSeq.splitSeq.1 34seconds
 // bufio.(*Scanner).Scan 9seconds
 // gcBgMarkWorker 6seconds
 // runtime.mcall 3seconds
+//
+// Mac Average 14seconds
 func V11() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {

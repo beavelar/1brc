@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,7 +32,8 @@ func main() {
 	// V4()
 	// V5()
 	// V6()
-	V7()
+	// V7()
+	V8()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -691,6 +693,174 @@ func V7() {
 			// Max eval
 			if val.Max < var32 {
 				val.Max = var32
+			}
+		}
+	}
+
+	keys := make([]string, len(values))
+	idx := 0
+	for key := range values {
+		keys[idx] = key
+		idx++
+	}
+	sort.Strings(keys)
+
+	output := "{"
+	for idx, key := range keys {
+		minVal := float64(values[key].Min) / 10
+		meanVal := math.Round(float64(values[key].Sum)/float64(values[key].Count)*10) / 100
+		maxVal := float64(values[key].Max) / 10
+		output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", key, minVal, meanVal, maxVal)
+		if idx < len(keys)-1 {
+			output += ", "
+		}
+	}
+	output += "}"
+	fmt.Println(output)
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Starts with the base of V7 but overrides the scanner Split() method to return a string
+// chunk of multiple lines instead of line by line, and spins up multiple workers to process
+// the chunk by splitting it by newlines and then running through the same calculations.
+// Combines the results of all workers at the end to produce the end result
+//
+// Mac Average 13seconds
+func V8() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	// The number of workers to spin up to handle line chunk processing/calculations, mess
+	// around with the number of workers to view the impact
+	workers := 10
+
+	var wg sync.WaitGroup
+	linesChan := make(chan string, 10000)
+	resultMaps := make([]map[string]*ValuesV2, workers)
+
+	for idx := range workers {
+		wg.Add(1)
+		resultMap := make(map[string]*ValuesV2)
+		resultMaps[idx] = resultMap
+		go func(wg *sync.WaitGroup, input chan string, output map[string]*ValuesV2) {
+			for chunkStr := range input {
+				for lineStr := range strings.SplitSeq(chunkStr, "\n") {
+					idx := strings.Index(lineStr, ";")
+
+					keyBytes := lineStr[:idx]
+					valBytes := lineStr[idx+1:]
+					key := string(keyBytes)
+
+					var sign int32 = 1
+					var intPart, fracPart int32
+					var decimalSeen bool
+					var numStart int
+
+					if valBytes[0] == '-' {
+						sign = -1
+						numStart = 1
+					} else {
+						numStart = 0
+					}
+
+					for i := numStart; i < len(valBytes); i++ {
+						if valBytes[i] == '.' {
+							decimalSeen = true
+							continue
+						}
+						digit := int32(valBytes[i] - '0')
+						if !decimalSeen {
+							intPart = intPart*10 + digit
+						} else {
+							fracPart = digit
+						}
+					}
+					var32 := sign * (intPart*10 + fracPart)
+					var64 := int64(var32)
+
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					if val, found := output[key]; !found {
+						output[key] = &ValuesV2{Min: var32, Sum: var64, Max: var32}
+					} else {
+						// Min eval
+						if val.Min > var32 {
+							val.Min = var32
+						}
+
+						// Mean eval
+						val.Sum += var64
+						val.Count++
+
+						// Max eval
+						if val.Max < var32 {
+							val.Max = var32
+						}
+					}
+				}
+			}
+			wg.Done()
+		}(&wg, linesChan, resultMap)
+	}
+
+	scanner := bufio.NewScanner(file)
+
+	// Create chunks of 100 lines instead of reading line by line, mess around with line
+	// chunks to view the impact
+	linesPerChunk := 1000
+	scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		if atEOF && len(data) == 0 {
+			return 0, nil, nil
+		}
+
+		newlineCount := 0
+		lastNewlineIndex := -1
+		for i, b := range data {
+			if b == '\n' {
+				newlineCount++
+				lastNewlineIndex = i
+			}
+			if newlineCount >= linesPerChunk {
+				return lastNewlineIndex + 1, data[:lastNewlineIndex], nil
+			}
+		}
+
+		if atEOF {
+			return len(data), data, nil
+		}
+
+		return 0, nil, nil
+	})
+
+	values := make(map[string]*ValuesV2, 1000)
+	for scanner.Scan() {
+		linesChan <- scanner.Text()
+	}
+
+	close(linesChan)
+	wg.Wait()
+
+	for _, resultMap := range resultMaps {
+		for key, val := range resultMap {
+			if finalVal, found := values[key]; !found {
+				values[key] = val
+			} else {
+				if finalVal.Min > val.Min {
+					finalVal.Min = val.Min
+				}
+				finalVal.Sum += val.Sum
+				finalVal.Count += val.Count
+				if finalVal.Max < val.Max {
+					finalVal.Max = val.Max
+				}
 			}
 		}
 	}

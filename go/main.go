@@ -401,7 +401,7 @@ func V4() {
 	}
 }
 
-// Pretty much the save as V4 but sets the size of the values slice to 1,000
+// Pretty much the save as V4 but sets the size of the values map to 1,000
 //
 // Average 37seconds
 // runtime.mapaccess2_faststr 16seconds

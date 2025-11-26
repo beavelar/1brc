@@ -1,5 +1,9 @@
 # 1 Billion Row Challenge (1BRC) - Go
 
+Being the first language I attempted this challenge with, it was interesing profiling the runs between the Windows machine and the Mac machine. At the beginning there was a large gap between the Windows and Mac machines, but at the end once we concurrently processed the file the Mac machine was faster. It was also interesting to see how different the bottle necks were, on the Windows side there was large bottlelnecks in some of the runtime calls, runtime.mapaccess2_faststr for example, this bottleneck was not in the Mac side however when we started optimizing and only getting a second of improvement. For future runs the Windows timing will be used to view improvements but the Mac timings will still be captured
+
+Unsure if this will translate to the other programming languages but it was interesting to see how "small" adjustments could provide a huge improvement, for example tracking values in 1 map instead of 3 maps, determining the position of the semi-colon and doing string slicing instead of using strings.Split, utiling scanner.Bytes instead of scanner.Text, and utiling multiple goroutine works to process the lines each produced substantial time improvements
+
 ## Build and Profile
 
 ```bash
@@ -16,6 +20,7 @@ Super basic tracking and parsing, first go hacking something together. Starting 
 #### Timings
 
 ```
+Average time 1minute 49seconds
 runtime.mapaccess2_faststr 37seconds
 strings.Split 26seconds
 strconv.ParseFloat 16seconds

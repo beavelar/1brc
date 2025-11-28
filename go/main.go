@@ -21,7 +21,7 @@ func main() {
 	fmt.Println("Running calculations")
 	fmt.Printf("Number of threads available: %d\n", runtime.NumCPU())
 	start := time.Now()
-	prof, err := os.Create("cpu.pprof")
+	prof, err := os.Create("cpu.prof")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -9,7 +9,7 @@ Unsure if this will translate to the other programming languages but it was inte
 ```bash
 go build -o 1brc
 ./1brc
-go tool pprof -http=":8080" 1brc cpu.pprof
+go tool pprof -http=":8080" 1brc cpu.prof
 ```
 
 ## Versions

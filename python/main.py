@@ -16,6 +16,9 @@ class Values(TypedDict):
 # min, max, total and count, then at the end calculating the mean while building the output
 # string
 #
+# Average time 11minutes 59seconds
+# <method 'split' of 'str' objects> 1minute 50seconds
+# <method 'replace' of 'str' objects> 1minute 25seconds
 def V1():
   measurements: Dict[str, Values] = {}
   measurments_file_path = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "1brc", "measurements.txt"))
@@ -53,6 +56,10 @@ def V1():
 # (ex. measurment[city]) and if the key exist, it'll return you the value, otherwise it'll
 # return the default value listed
 #
+# Average time 13minutes 5seconds
+# <method 'split' of 'str' objects> minute 53seconds
+# <built-in method builtins.max> 1minute
+# <built-in method builtins.min> 1minute
 def V2():
   measurements: Dict[str, Values] = defaultdict(lambda: {"count": 0, "sum": 0.0, "min": 0.0, "max": 0.0})
   measurments_file_path = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "1brc", "measurements.txt"))
@@ -78,6 +85,10 @@ def V2():
 # Identical to V2 but updates the output string building in the end to append to a list and
 # do a join with the values to avoid string concactinations
 #
+# Average time 13minutes 25seconds
+# <method 'split' of 'str' objects> 2minutes 1seconds
+# <built-in method builtins.min> 1minute 1second
+# <built-in method builtins.max> 1minute
 def V3():
   measurements: Dict[str, Values] = defaultdict(lambda: {"count": 0, "sum": 0.0, "min": 0.0, "max": 0.0})
   measurments_file_path = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "1brc", "measurements.txt"))
@@ -95,7 +106,7 @@ def V3():
     output_parts = []
     for city in sorted(measurements):
       measurement = measurements[city]
-      mean = f"{(measurement["sum"] / measurement["count"]):.1f}"
+      mean = f"{(measurement["sum"] / measurement["count"]):.1f}"  
       output_parts.append(f"{city}={measurements[city]["min"]}/{mean}/{measurements[city]["max"]}")
     print(f"{{{", ".join(output_parts)}}}")
 
@@ -113,6 +124,10 @@ class CityStats:
         self.sum += temperature
 
 # Mostly the same as V3 but uses a dataclass instead of a dictionary for the city stats
+#
+# Average time 16minutes 10seconds
+# main.py(update) 6minutes 47seconds
+# <method 'split' of 'str' objects> 2minutes 1second
 def V4():
   measurements: Dict[str, Values] = defaultdict(CityStats)
   measurments_file_path = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "1brc", "measurements.txt"))
@@ -125,11 +140,15 @@ def V4():
     output_parts = []
     for city in sorted(measurements):
       measurement = measurements[city]
-      mean = f"{(measurement["sum"] / measurement["count"]):.1f}"
-      output_parts.append(f"{city}={measurements[city]["min"]}/{mean}/{measurements[city]["max"]}")
+      mean = f"{(measurement.sum / measurement.count):.1f}"
+      output_parts.append(f"{city}={measurements[city].min}/{mean}/{measurements[city].max}")
     print(f"{{{", ".join(output_parts)}}}")
 
 # Same as V4 but specifies to update the measurements file with read and utf-8 encoding
+#
+# Average time 15minutes 55seconds
+# main.py(update) 6 minutes 41 seconds
+# <method 'split' of 'str' objects> 2minutes
 def V5():
   measurements: Dict[str, Values] = defaultdict(CityStats)
   measurments_file_path = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "1brc", "measurements.txt"))
@@ -142,8 +161,8 @@ def V5():
     output_parts = []
     for city in sorted(measurements):
       measurement = measurements[city]
-      mean = f"{(measurement["sum"] / measurement["count"]):.1f}"
-      output_parts.append(f"{city}={measurements[city]["min"]}/{mean}/{measurements[city]["max"]}")
+      mean = f"{(measurement.sum / measurement.count):.1f}"
+      output_parts.append(f"{city}={measurements[city].min}/{mean}/{measurements[city].max}")
     print(f"{{{", ".join(output_parts)}}}")
 
 if __name__ == "__main__":

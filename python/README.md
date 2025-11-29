@@ -4,7 +4,9 @@ Attempting to do the challenge in python was kinda rough. With a starting time o
 
 With the attempts I also opted not to use pypy as the JIT compiler as I'm mostly searching for what could cause slows downs or speed ups in pythons. This does mean that all the times could be potentially lower.
 
-Something else that made the challenge harder to tackle was trying to run the profiler and visualize what exactly is taking all the time for execution. Setting up py-spy didn't go well on Mac and cProfile doesn't provide much information. Will be re-running on PC to check if more information is provided or if I have better luck using py-spy or pyinstrument (TODO: Update this block)
+Something else that made the challenge harder to tackle was trying to run the profiler and visualize what exactly is taking all the time for execution. Setting up py-spy didn't go well on Mac and cProfile doesn't provide much information.
+
+Ended the optimization attempts early as it wasn't really intuitive debugging the slow downs through the profiler. py-spy might have been better to use but with the inability to setup on Mac I won't be able to use it.
 
 ## Setup, Run and Profile
 

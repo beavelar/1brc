@@ -129,6 +129,7 @@ def V4():
       output_parts.append(f"{city}={measurements[city]["min"]}/{mean}/{measurements[city]["max"]}")
     print(f"{{{", ".join(output_parts)}}}")
 
+# Same as V4 but specifies to update the measurements file with read and utf-8 encoding
 def V5():
   measurements: Dict[str, Values] = defaultdict(CityStats)
   measurments_file_path = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "1brc", "measurements.txt"))

@@ -69,7 +69,7 @@ public class _1brc {
 
     var output = "{";
     var idx = 0;
-    var count = keys.size();
+    var count = keys.size() - 1;
     for (var key : keys) {
       var value = values.get(key);
       output += String.format("%s=%.1f/%.1f/%.1f", key, value.min, value.sum / value.count, value.max);

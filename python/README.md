@@ -8,6 +8,8 @@ Something else that made the challenge harder to tackle was trying to run the pr
 
 Ended the optimization attempts early as it wasn't really intuitive debugging the slow downs through the profiler. py-spy might have been better to use but with the inability to setup on Mac I won't be able to use it
 
+One upside to the python attempts is that iterating through the versions was very easy. I was able to complete all attempt in a couple of hours. This may also be because I had a better general idea of how I wanted to attempt it since I tackled the go attempt already but iterating over the attempts did feel incredibly easy
+
 ## Setup, Run and Profile
 
 ```bash

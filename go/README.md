@@ -15,6 +15,7 @@ go tool pprof -http=":8080" 1brc cpu.prof
 ## Versions
 
 ### V1
+
 Super basic tracking and parsing, first go hacking something together. Starting with a average time of 1 minute 49 seconds where the major bottlenecks where in accessing multiple maps utilizing strings as the map keys, using strings.Split to split the string by the semi-colon seperator, and using strconv.ParseFloat to convert the string number into a float
 
 #### Timings
@@ -31,6 +32,7 @@ bufio.(*Scanner).Scan 8seconds
 ```
 
 ### V2
+
 Reducing the number of maps used from 3 to 1 but otherwise identical to `V1`, removing the runtime.mapassign_faststr and runtime.mapaccess1_faststr bottlenecks, decreasing the average time by ~30 seconds, now at 1 minute 7 seconds
 
 #### Timings
@@ -66,6 +68,7 @@ values := make(map[string]*Values)
 ```
 
 ### V3
+
 Pretty identical to V2 but uses strings.Index and string slicing instead of strings.Split for seperating the key and the value from the line being read, removing the strings.Split bottleneck, decreasing the average time by ~20 seconds, now at 47 seconds. This does introduce a new bottleneck of strings.Index but this bottleneck is less than strings.Split
 
 #### Timings
@@ -97,7 +100,8 @@ var64, err := strconv.ParseFloat(valStr[idx+1:], 64)
 ```
 
 ### V4
-Mostly the same as V3, but using scanner.Bytes instead of scanner.Text to read in the next line. This did change how we pulled out the key and value from the line as instead of using strings.Index to locate the semi-colon, we loop through the byte slice. For the value, instead of using strconv.ParseFloat to determine the float value, we are now looping through the value byte slice to determine if the value is positive or negative and building the integer part and the decimal part, then combining the parts to determine the float value. This removes the strconv.ParseFloat and bufio.(*Scanner).Text bottlenecks, decreasing the average time by ~10 seconds, now at 38seconds
+
+Mostly the same as V3, but using scanner.Bytes instead of scanner.Text to read in the next line. This did change how we pulled out the key and value from the line as instead of using strings.Index to locate the semi-colon, we loop through the byte slice. For the value, instead of using strconv.ParseFloat to determine the float value, we are now looping through the value byte slice to determine if the value is positive or negative and building the integer part and the decimal part, then combining the parts to determine the float value. This removes the strconv.ParseFloat and bufio.(\*Scanner).Text bottlenecks, decreasing the average time by ~10 seconds, now at 38seconds
 
 #### Timings
 
@@ -161,9 +165,11 @@ var64 := sign * (float64(intPart) + float64(fracPart)/10.0)
 ```
 
 ### V5
+
 Identical to V4 but sets the size of the values map to a initial size of 1,000. This does not seem to have had much of an impact as the average time only decreased by ~1 second, now at 37 seconds.
 
 #### Timings
+
 ```
 Average 37seconds
 runtime.mapaccess2_faststr 16seconds
@@ -184,6 +190,7 @@ values := make(map[string]*Values, 1000)
 ```
 
 ### V6
+
 Identical to V5 but updates the Values struct to work with int32/int64 instead of float64. The decimal calculation is then done at the very end when the output string is being generated. This does not seem to have had much of an impact as the average time only decreased by ~1 second, now at 36 seconds
 
 #### Timings
@@ -218,6 +225,7 @@ type ValuesV2 struct {
 ```
 
 ### V7
+
 Identical to V6 but utilizing bytes.IndexByte to located the index of the semi-colon in the line instead of manually looping through the bytes. This does not seem to have had much of an impact as the average time only decreased by ~1 second, now at 35 seconds
 
 #### Timings
@@ -248,6 +256,7 @@ idx := bytes.IndexByte(lineBytes, ';')
 ```
 
 ### V8
+
 Starts with V7 as the base, but introduces goroutines to process the lines concurrently and overriding the scanner Split() method to provide chunks of multiple lines per scan. To avoid any bottleneck with heavy RWMutex usage, the goroutine workers will all work with their own maps, and at the end after all lines have been processed, the output of all goroutines will be combined for the final result. Along with this, instead of processing line by line, the goroutines are provided chunks with multiple lines to work with. This decreased average time by ~20 seconds, now at 14 seconds. Since each goroutine is now processing chunks of lines and not a line at a time, a new bottleneck is introduced because of the usage of strings.SplitSeq
 
 #### Timings
@@ -458,6 +467,7 @@ for _, resultMap := range resultMaps {
 ```
 
 ### V9
+
 Uses V7 as the base instead of V8 to further optimize single thread performance. Instead of using the string of the city for the map key, use a basic hasher to turn the byte slice from the line to a int64 which will be used as the key for the map. The Values struct is also updated to store the city name as well to be able to easily retrieve the city name for the final output. From V8 to V9 the time does increase since we went back to single threaded processing, from 14 seconds to 33 seconds, but from V7 to V9 the time does decrease a little bit by ~2 seconds, now at 33 seconds
 
 #### Timings
@@ -510,6 +520,7 @@ output += fmt.Sprintf("%s=%.1f/%.1f/%.1f", value.City, minVal, meanVal, maxVal)
 ```
 
 ### V10
+
 Combines the improvements from V8 and V9, running the processing over multiple workers and using a int64 as the map key instead of a string, decreasing the time by ~17 seconds (V9 vs V10), now at 16 seconds
 
 #### Timings
@@ -523,6 +534,7 @@ runtime.gcBgMarkWorker 5seconds
 ```
 
 ### V11
+
 Identical to V10 but updating the number of workers to spin upu to be 1 less than the number of threads on the CPU and increasing the scanner buffer size, decreasing time by ~6 seconds, now at 10 seconds
 
 #### Timings

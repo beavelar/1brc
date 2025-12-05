@@ -12,23 +12,23 @@ The 1BRC involves reading a text file with 1 billion rows (each `city;temperatur
 
 1. Clone this repo, navigate to the directory, and clone the [`1 Billion Row Challenge Repo`](https://github.com/gunnarmorling/1brc)
 
-    ```bash
-    git clone git@github.com:beavelar/1brc.git
-    cd 1brc
-    git clone git@github.com:gunnarmorling/1brc.git
-    ```
+   ```bash
+   git clone git@github.com:beavelar/1brc.git
+   cd 1brc
+   git clone git@github.com:gunnarmorling/1brc.git
+   ```
 
 2. Navigate to the inner `1brc` directory and build (Requires JDK 21 and Maven)
 
-    ```bash
-    cd 1brc
-    mvn clean verify
-    ```
+   ```bash
+   cd 1brc
+   mvn clean verify
+   ```
 
 3. Generate the measurements.txt file
 
-    ```bash
-    bash create_measurements.sh 1000000000
-    ```
+   ```bash
+   bash create_measurements.sh 1000000000
+   ```
 
-*All attempts will re-use this measurements.txt file within the inner 1brc directory to not generate unecessary copies of the file as the generated file is around 13.5GB*
+_All attempts will re-use this measurements.txt file within the inner 1brc directory to not generate unecessary copies of the file as the generated file is around 13.5GB_

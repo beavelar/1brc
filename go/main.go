@@ -1397,16 +1397,29 @@ func V12() {
 	}
 	defer file.Close()
 
-	// 12MB buffer
-	buf := make([]byte, 12*1024*1024)
+	// The number of workers to spin up to handle line chunk processing/calculations, mess
+	// around with the number of workers to view the impact
+	workers := runtime.NumCPU() - 1
+
+	// 12MB buffer / CPU threads
+	bufSize := (12 * 1024 * 1024) / workers
+
+	bufs := make([][]byte, workers)
+	for idx := range workers {
+		bufs[idx] = make([]byte, bufSize)
+	}
+
+	idx := 0
 	for {
-		bufSize, err := file.Read(buf)
+		contentSize, err := file.Read(bufs[idx])
 		if err != nil && err != io.EOF {
 			log.Fatal(err)
 		}
 
-		if bufSize == 0 {
+		if contentSize == 0 {
 			break
 		}
+
+		idx = (idx + 1) % workers
 	}
 }

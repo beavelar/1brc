@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"hash/fnv"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -39,7 +40,8 @@ func main() {
 	// V8()
 	// V9()
 	// V10()
-	V11()
+	// V11()
+	V12()
 
 	elapsed := time.Since(start)
 	fmt.Printf("Took %s to run\n", elapsed)
@@ -1382,5 +1384,29 @@ func V11() {
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
+	}
+}
+
+// WIP - Reading file using file.Read instead of tracking the buffer ourselves.
+// Think an approach worth trying is creating buffers per worker and reading into
+// those buffers that way we don't need to copy the buffer content for safe reading
+func V12() {
+	file, err := os.Open("../1brc/measurements.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	// 12MB buffer
+	buf := make([]byte, 12*1024*1024)
+	for {
+		bufSize, err := file.Read(buf)
+		if err != nil && err != io.EOF {
+			log.Fatal(err)
+		}
+
+		if bufSize == 0 {
+			break
+		}
 	}
 }

@@ -9,7 +9,8 @@ public class _1brc {
     var start = System.nanoTime();
     System.out.println("Running calculations");
 
-    V1();
+    // V1();
+    V2();
 
     var stop = System.nanoTime();
     var totalSeconds = (stop - start) / 1_000_000_000;
@@ -47,10 +48,66 @@ public class _1brc {
    * java/lang/String.split 4,602 samples
    * java/util/HashMap.get 2,220 samples
    */
-  private static void V1() {
+  public static void V1() {
     var values = new HashMap<String, Values>();
 
     try (var reader = new BufferedReader(new FileReader("../1brc/measurements.txt"))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        var parts = line.split(";");
+        var key = parts[0];
+        var value = Double.parseDouble(parts[1]);
+
+        var val = values.get(key);
+        if (val == null) {
+          values.put(key, new Values(value, value, value));
+        } else {
+          val.count++;
+          val.sum += value;
+          if (val.max < value)
+            val.max = value;
+          if (val.min > value)
+            val.min = value;
+        }
+      }
+    } catch (Exception ex) {
+      System.out.println("Something went wrong :(");
+      System.exit(1);
+    }
+
+    var keys = new ArrayList<String>(values.keySet());
+    Collections.sort(keys);
+
+    var output = "{";
+    var idx = 0;
+    var count = keys.size() - 1;
+    for (var key : keys) {
+      var value = values.get(key);
+      output += String.format("%s=%.1f/%.1f/%.1f", key, value.min, value.sum / value.count, value.max);
+      if (idx < count) {
+        output += ", ";
+      }
+      idx++;
+    }
+    output += "}";
+    System.out.println(output);
+  }
+
+  /**
+   * Identical to V2 but increases the buffer size of BufferedReader to 12MB
+   * instead of the default 8KB
+   * 
+   * Mac Average time 2minutes 43seconds
+   * java/io/BufferedReader.readLine 5,271 samples
+   * java/lang/Double.parseDouble 4,005 samples
+   * java/lang/String.split 4,750 samples
+   * java/util/HashMap.get 2,113 samples
+   */
+  public static void V2() {
+    var values = new HashMap<String, Values>();
+
+    // 12MB buffer
+    try (var reader = new BufferedReader(new FileReader("../1brc/measurements.txt"), 12 * 1024 * 1024)) {
       String line;
       while ((line = reader.readLine()) != null) {
         var parts = line.split(";");

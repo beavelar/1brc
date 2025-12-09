@@ -15,7 +15,6 @@ public class _1brc {
     var totalSeconds = (stop - start) / 1_000_000_000;
     var minutes = totalSeconds / 60;
     var seconds = totalSeconds % 60;
-    System.out.println("Took %s to run");
 
     if (minutes > 0) {
       System.out.println(String.format("Elapsed time: %s minutes and %s seconds", minutes, seconds));
@@ -30,14 +29,24 @@ public class _1brc {
     public double min = 0;
     public double sum = 0;
 
-    public Values(int count, double max, double min, double sum) {
-      this.count = count;
+    public Values(double max, double min, double sum) {
+      this.count = 1;
       this.max = max;
       this.min = min;
       this.sum = sum;
     }
   }
 
+  /**
+   * Quick and ditry initial attempt just looping through all the lines, splitting
+   * by semi-colon, parsing the double and using a HashMap to track unique cities.
+   * 
+   * Mac Average time 2minutes 48seconds
+   * java/io/BufferedReader.readLine 6,117 samples
+   * java/lang/Double.parseDouble 3,758 samples
+   * java/lang/String.split 4,602 samples
+   * java/util/HashMap.get 2,220 samples
+   */
   private static void V1() {
     var values = new HashMap<String, Values>();
 
@@ -50,9 +59,10 @@ public class _1brc {
 
         var val = values.get(key);
         if (val == null) {
-          values.put(key, new Values(0, value, value, value));
+          values.put(key, new Values(value, value, value));
         } else {
           val.count++;
+          val.sum += value;
           if (val.max < value)
             val.max = value;
           if (val.min > value)
@@ -76,7 +86,7 @@ public class _1brc {
       if (idx < count) {
         output += ", ";
       }
-      count++;
+      idx++;
     }
     output += "}";
     System.out.println(output);

@@ -297,12 +297,12 @@ func V3() {
 
 // Mostly identical to V3 but using scanner.Bytes() instead of scanner.Text()
 //
-// Average 38seconds
+// Average time 38seconds
 // runtime.mapaccess2_faststr 14seconds
 // runtime.slicebytetostring 9seconds
 // bufio.(*Scanner).Scan 7seconds
 //
-// Mac Average 57seconds
+// Mac Average time 57seconds
 func V4() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -405,12 +405,12 @@ func V4() {
 
 // Pretty much the save as V4 but sets the size of the values map to 1,000
 //
-// Average 37seconds
+// Average time 37seconds
 // runtime.mapaccess2_faststr 16seconds
 // runtime.slicebytetostring 7seconds
 // bufio.(*Scanner).Scan 7seconds
 //
-// Mac Average 55seconds
+// Mac Average time 55seconds
 func V5() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -522,12 +522,12 @@ type ValuesV2 struct {
 // Mostly the save as V5 but opts for working with int32 and int64 for the values
 // to trace and do the float64 work only at the end
 //
-// Average 36seconds
+// Average time 36seconds
 // runtime.mapaccess2_faststr 19seconds
 // runtime.slicebytetostring 7seconds
 // bufio.(*Scanner).Scan 7seconds
 //
-// Mac Average 54seconds
+// Mac Average time 54seconds
 func V6() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -631,12 +631,12 @@ func V6() {
 // Identical to V6 but utilizing bytes.IndexByte to locate the semicolon instead
 // of manually searching using the for loop
 //
-// Average 35seconds
+// Average time 35seconds
 // runtime.mapaccess2_faststr 18seconds
 // bufio.(*Scanner).Scan 7seconds
 // runtime.slicebytetostring 6seconds
 //
-// Mac Average 54seconds
+// Mac Average time 54seconds
 func V7() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -736,12 +736,12 @@ func V7() {
 // the chunk by splitting it by newlines and then running through the same calculations.
 // Combines the results of all workers at the end to produce the end result
 //
-// Average 14seconds
+// Average time 14seconds
 // main.V8.func1.SplitSeq.splitSeq.1 29seconds
 // bufio.(*Scanner).Scan 18seconds
 // runtime.mcall 6seconds
 //
-// Mac Average 13seconds
+// Mac Average time 13seconds
 func V8() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -918,11 +918,11 @@ type ValuesV3 struct {
 // hasher to turn the byte slice to a int64 to be used as the key and store
 // the city name in the new ValuesV3
 //
-// Average 33seconds
+// Average time 33seconds
 // bufio.(*Scanner).Scan 14seconds
 // runtime.mapaccess2_fast64 12seconds
 //
-// Mac Average 44seconds
+// Mac Average time 44seconds
 func V9() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -1026,13 +1026,13 @@ func V9() {
 // A combination of V8 and V9, spreading the work over various workers and using a int64
 // as the map key instead of a string
 //
-// Average 16seconds
+// Average time 16seconds
 // main.V10.func1.SplitSeq.splitSeq.1 28seconds
 // bufio.(*Scanner).Scan 16seconds
 // runtime.mcall 5seconds
 // runtime.gcBgMarkWorker 5seconds
 //
-// Mac Average 14seconds
+// Mac Average time 14seconds
 func V10() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {
@@ -1207,13 +1207,13 @@ func V10() {
 // Identical to V10 but updating workers to be 1 less than the number of threads on the CPU
 // and increasing scanner buffer size
 //
-// Average 10seconds
+// Average time 10seconds
 // main.V11.func1.SplitSeq.splitSeq.1 34seconds
 // bufio.(*Scanner).Scan 9seconds
 // gcBgMarkWorker 6seconds
 // runtime.mcall 3seconds
 //
-// Mac Average 14seconds
+// Mac Average time 14seconds
 func V11() {
 	file, err := os.Open("../1brc/measurements.txt")
 	if err != nil {

@@ -10,7 +10,8 @@ public class _1brc {
     System.out.println("Running calculations");
 
     // V1();
-    V2();
+    // V2();
+    V3();
 
     var stop = System.nanoTime();
     var totalSeconds = (stop - start) / 1_000_000_000;
@@ -72,6 +73,7 @@ public class _1brc {
       }
     } catch (Exception ex) {
       System.out.println("Something went wrong :(");
+      ex.printStackTrace();
       System.exit(1);
     }
 
@@ -128,6 +130,85 @@ public class _1brc {
       }
     } catch (Exception ex) {
       System.out.println("Something went wrong :(");
+      ex.printStackTrace();
+      System.exit(1);
+    }
+
+    var keys = new ArrayList<String>(values.keySet());
+    Collections.sort(keys);
+
+    var output = "{";
+    var idx = 0;
+    var count = keys.size() - 1;
+    for (var key : keys) {
+      var value = values.get(key);
+      output += String.format("%s=%.1f/%.1f/%.1f", key, value.min, value.sum / value.count, value.max);
+      if (idx < count) {
+        output += ", ";
+      }
+      idx++;
+    }
+    output += "}";
+    System.out.println(output);
+  }
+
+  public static void V3() {
+    var values = new HashMap<String, Values>();
+    var cbufSize = 12 * 1024 * 1024;
+    var cbuf = new char[cbufSize];
+
+    try (var reader = new FileReader("../1brc/measurements.txt")) {
+      var citySb = new StringBuilder();
+      var tempSb = new StringBuilder();
+      var reading = true;
+      var parsingCity = true;
+      var charsRead = 0;
+      var city = "";
+      var temp = 0.0;
+      while ((charsRead = reader.read(cbuf)) != -1 && reading) {
+        for (var idx = 0; idx < charsRead - 1; idx++) {
+          if (cbuf[idx] == ';') {
+            parsingCity = false;
+            city = citySb.toString();
+            citySb = new StringBuilder();
+            continue;
+          }
+
+          if (cbuf[idx] == '\r' || cbuf[idx] == '\n') {
+            // End of file reached
+            if (tempSb.length() == 0) {
+              reading = false;
+              break;
+            }
+
+            parsingCity = true;
+            temp = Double.parseDouble(tempSb.toString());
+            tempSb = new StringBuilder();
+
+            var val = values.get(city);
+            if (val == null) {
+              values.put(city, new Values(temp, temp, temp));
+            } else {
+              val.count++;
+              val.sum += temp;
+              if (val.max < temp)
+                val.max = temp;
+              if (val.min > temp)
+                val.min = temp;
+            }
+            continue;
+          }
+
+          if (parsingCity) {
+            citySb.append(cbuf[idx]);
+          } else {
+            tempSb.append(cbuf[idx]);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      System.out.println("Something went wrong :(");
+      ex.printStackTrace();
       System.exit(1);
     }
 

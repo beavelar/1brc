@@ -45,3 +45,19 @@ java/lang/Double.parseDouble 1,226 samples
 java/lang/String.split
 java/util/HashMap.get 1,314 samples
 ```
+
+#### V1 Snippet
+
+```java
+try (var reader = new BufferedReader(new FileReader("../1brc/measurements.txt"))) {
+  //
+}
+```
+
+#### V2 Snippet
+
+```java
+try (var reader = new BufferedReader(new FileReader("../1brc/measurements.txt"), 12 * 1024 * 1024)) {
+  //
+}
+```

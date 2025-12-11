@@ -43,6 +43,12 @@ public class _1brc {
    * Quick and ditry initial attempt just looping through all the lines, splitting
    * by semi-colon, parsing the double and using a HashMap to track unique cities.
    * 
+   * Average time 1minute 34seconds
+   * java/io/BufferedReader.readLine 3,545 samples
+   * java/lang/Double.parseDouble 1,402 samples
+   * java/lang/String.split 3,329 samples
+   * java/util/HashMap.get 1,325 samples
+   * 
    * Mac Average time 2minutes 48seconds
    * java/io/BufferedReader.readLine 6,117 samples
    * java/lang/Double.parseDouble 3,758 samples
@@ -98,6 +104,12 @@ public class _1brc {
   /**
    * Identical to V2 but increases the buffer size of BufferedReader to 12MB
    * instead of the default 8KB
+   * 
+   * Average time 1minute 34seconds
+   * java/io/BufferedReader.readLine 3,740 samples
+   * java/lang/Double.parseDouble 1,226 samples
+   * java/lang/String.split 3,577 samples
+   * java/util/HashMap.get 1,314 samples
    * 
    * Mac Average time 2minutes 43seconds
    * java/io/BufferedReader.readLine 5,271 samples

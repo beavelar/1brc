@@ -61,3 +61,72 @@ try (var reader = new BufferedReader(new FileReader("../1brc/measurements.txt"),
   //
 }
 ```
+
+### V3
+
+Updates the file reading portion to use FileReader and provide the contents to a char array, iterate over that char array instead of reading through the buffered reader
+
+#### Timings
+
+```
+Average time 1minute 32seconds
+java/io/Reader.read 1,847 samples
+java/lang/Double.parseDouble 1,556 samples
+java/lang/StringBuilder.append 1,354 samples
+java/lang/StringBuilder.toString 1,649 samples
+java/util/HashMap.get 1,648 samples
+```
+
+#### V2 Snippet
+
+```java
+try (var reader = new BufferedReader(new FileReader("../1brc/measurements.txt"), 12 * 1024 * 1024)) {
+  String line;
+  while ((line = reader.readLine()) != null) {
+    var parts = line.split(";");
+    var key = parts[0];
+    var value = Double.parseDouble(parts[1]);
+
+    //
+  }
+}
+```
+
+#### V2 Snippet
+
+```java
+try (var reader = new FileReader("../1brc/measurements.txt")) {
+  var citySb = new StringBuilder();
+  var tempSb = new StringBuilder();
+  var parsingCity = true;
+  var charsRead = 0;
+  var city = "";
+  var temp = 0.0;
+
+  while ((charsRead = reader.read(cbuf)) > 0) {
+    for (var idx = 0; idx < charsRead; idx++) {
+      if (cbuf[idx] == ';') {
+        parsingCity = false;
+        city = citySb.toString();
+        citySb = new StringBuilder();
+        continue;
+      }
+
+      if (cbuf[idx] == '\r' || cbuf[idx] == '\n') {
+        parsingCity = true;
+        temp = Double.parseDouble(tempSb.toString());
+        tempSb = new StringBuilder();
+
+        //
+        continue;
+      }
+
+      if (parsingCity) {
+        citySb.append(cbuf[idx]);
+      } else {
+        tempSb.append(cbuf[idx]);
+      }
+    }
+  }
+}
+```

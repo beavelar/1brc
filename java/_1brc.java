@@ -164,6 +164,18 @@ public class _1brc {
     System.out.println(output);
   }
 
+  /**
+   * Updates the file reading portion to use FileReader and provide the contents
+   * to a char array, iterate over that char array instead of reading through the
+   * buffered reader
+   * 
+   * Average time 1minute 32seconds
+   * java/io/Reader.read 1,847 samples
+   * java/lang/Double.parseDouble 1,556 samples
+   * java/lang/StringBuilder.append 1,354 samples
+   * java/lang/StringBuilder.toString 1,649 samples
+   * java/util/HashMap.get 1,648 samples
+   */
   public static void V3() {
     var values = new HashMap<String, Values>();
     var cbufSize = 12 * 1024 * 1024;
@@ -172,13 +184,13 @@ public class _1brc {
     try (var reader = new FileReader("../1brc/measurements.txt")) {
       var citySb = new StringBuilder();
       var tempSb = new StringBuilder();
-      var reading = true;
       var parsingCity = true;
       var charsRead = 0;
       var city = "";
       var temp = 0.0;
-      while ((charsRead = reader.read(cbuf)) != -1 && reading) {
-        for (var idx = 0; idx < charsRead - 1; idx++) {
+
+      while ((charsRead = reader.read(cbuf)) > 0) {
+        for (var idx = 0; idx < charsRead; idx++) {
           if (cbuf[idx] == ';') {
             parsingCity = false;
             city = citySb.toString();
@@ -187,12 +199,6 @@ public class _1brc {
           }
 
           if (cbuf[idx] == '\r' || cbuf[idx] == '\n') {
-            // End of file reached
-            if (tempSb.length() == 0) {
-              reading = false;
-              break;
-            }
-
             parsingCity = true;
             temp = Double.parseDouble(tempSb.toString());
             tempSb = new StringBuilder();
